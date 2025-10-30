@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PM AI 안전 시스템 시연 (6대 기술)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body {
+            font-family: 'Inter', 'Malgun Gothic', sans-serif;
+            background-color: #1e293b; /* Slate-800 Dark Background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        #system-box {
+            background-color: #0f172a; /* Slate-900 */
+            border: 4px solid #3b82f6; /* Blue-500 */
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+            max-width: 900px;
+            width: 100%;
+        }
+        .ai-status-indicator {
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .ai-status-indicator.success { background-color: #10b981; } /* Emerald */
+        .ai-status-indicator.warning { background-color: #f59e0b; } /* Amber */
+        .ai-status-indicator.error { background-color: #ef4444; } /* Red */
+        .ai-status-indicator.processing { background-color: #6366f1; } /* Indigo */
+        .camera-view {
+            height: 300px;
+            background-color: #000;
+            border: 1px solid #334155;
+            position: relative;
+            overflow: hidden;
+        }
+        .overlay-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #facc15; /* Yellow */
+            text-shadow: 0 0 10px #facc15;
+            z-index: 20;
+        }
+        .visualization-box {
+            background-color: #1f2937;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+        .glow-button {
+            transition: all 0.3s ease;
+        }
+        .glow-button:hover {
+            box-shadow: 0 0 15px #fcd34d;
+        }
+    </style>
+</head>
+<body>
+
+<div id="system-box" class="rounded-3xl p-6">
+    <h1 class="text-3xl font-extrabold text-blue-400 mb-4 text-center">
+        PM AI 통합 안전 플랫폼 (6-Tech Demo)
+    </h1>
+    <p class="text-sm text-gray-400 mb-6 text-center">PM 탑승 3단계 AI 강제 개입 시뮬레이션</p>
+
+    <!-- 시뮬레이션 단계/로그 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="md:col-span-2">
+            <h2 class="text-xl font-bold text-gray-200 mb-3">AI 모듈 실시간 카메라 피드</h2>
+            <div id="camera-feed" class="camera-view rounded-lg">
+                <div id="camera-overlay" class="overlay-text hidden"></div>
+                <div class="absolute top-2 left-2 p-2 bg-red-700 bg-opacity-70 text-white rounded-lg text-sm font-bold shadow-xl">LIVE FEED</div>
+                
+                <!-- AI 인식 시뮬레이션 박스 -->
+                <div id="ai-detection-box" class="absolute border-4 border-yellow-400 opacity-0 transition-all duration-300" 
+                     style="top: 100px; left: 100px; width: 100px; height: 100px; opacity: 0;">
+                </div>
+                <div id="ai-detection-label" class="absolute bg-yellow-400 text-black text-xs font-bold p-1 rounded-t-lg opacity-0 transition-all duration-300"
+                     style="top: 96px; left: 100px; opacity: 0;"></div>
+            </div>
+        </div>
+        <div class="md:col-span-1">
+            <h2 class="text-xl font-bold text-gray-200 mb-3">통합 AI 시스템 상태</h2>
+            <div class="visualization-box h-[300px] overflow-y-auto">
+                <div id="system-log" class="text-xs text-gray-400 space-y-2">
+                    <p>[00:00:00] 시스템 초기화 완료. 탑승 전 인증 대기 중.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI 기술 단계별 컨트롤 -->
+    <div class="space-y-6">
+        <!-- 1. 탑승 전: 원천 차단 로직 (①, ②) -->
+        <div class="visualization-box p-4">
+            <h3 class="text-lg font-bold text-gray-200 mb-3">1. 탑승 전: 원천 차단 로직</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col space-y-2">
+                    <button id="auth-btn" class="glow-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl" onclick="startAuthSequence()">
+                        ① 면허 인증 시작 (OCR/Face Recognition)
+                    </button>
+                    <p id="auth-status" class="ai-status-indicator processing">면허 인증 대기</p>
+                </div>
+                <div class="flex flex-col space-y-2">
+                    <button id="helmet-btn" class="glow-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl" onclick="checkHelmet(true)">
+                        ② 안전모 인식 (객체 감지)
+                    </button>
+                    <p id="helmet-status" class="ai-status-indicator error">안전모 미감지</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 2. 운행 중: 강제 개입 로직 (③, ④) -->
+        <div class="visualization-box p-4">
+            <h3 class="text-lg font-bold text-gray-200 mb-3">2. 운행 중: 실시간 강제 개입 로직</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col space-y-2">
+                    <button class="glow-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl" onclick="triggerGeoFence(true)">
+                        ③ 구역 진입 시연 (지오펜싱)
+                    </button>
+                    <p id="geo-status" class="ai-status-indicator success">현재: 정상 주행 구역</p>
+                </div>
+                <div class="flex flex-col space-y-2">
+                    <button class="glow-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl" onclick="triggerDangerousDriving()">
+                        ④ 위험 운행 감지 시연 (센서 분석)
+                    </button>
+                    <p id="driving-status" class="ai-status-indicator success">현재: 안전 주행</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 반납 후: 규율 강화 로직 (⑤, ⑥) -->
+        <div class="visualization-box p-4">
+            <h3 class="text-lg font-bold text-gray-200 mb-3">3. 반납 후: 규율 강화 로직</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col space-y-2">
+                    <button class="glow-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl" onclick="triggerParkingVerification()">
+                        ⑤ 스마트 주차 검증 시연 (이미지 인식)
+                    </button>
+                    <p id="parking-status" class="ai-status-indicator processing">주차 검증 대기</p>
+                </div>
+                <div class="flex flex-col space-y-2">
+                    <button class="glow-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl" onclick="triggerIncentiveSystem()">
+                        ⑥ 평판 시스템 연동 시연
+                    </button>
+                    <p id="incentive-status" class="ai-status-indicator success">평판 시스템: 정상 연동</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 리셋 버튼 -->
+    <button onclick="resetSystem()" class="w-full mt-6 bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold py-2 rounded-xl transition duration-150">
+        시스템 초기화
+    </button>
+</div>
+
+<script>
+    const log = (message, status = 'processing') => {
+        const logContainer = document.getElementById('system-log');
+        const now = new Date();
+        const time = now.toTimeString().split(' ')[0];
+        const logEntry = document.createElement('p');
+        logEntry.innerHTML = `[${time}] <span class="text-${status === 'error' ? 'red-400' : status === 'success' ? 'green-400' : 'blue-400'}">${message}</span>`;
+        logContainer.prepend(logEntry);
+        // 로그가 20개를 넘지 않도록 유지
+        while (logContainer.children.length > 20) {
+            logContainer.removeChild(logContainer.lastChild);
+        }
+    };
+
+    const updateStatus = (id, message, status) => {
+        const element = document.getElementById(id);
+        element.textContent = message;
+        element.className = `ai-status-indicator ${status}`;
+    };
+
+    const updateCamera = (text, color = 'red', duration = 3000, detectionLabel = null) => {
+        const overlay = document.getElementById('camera-overlay');
+        overlay.textContent = text;
+        overlay.style.color = color;
+        overlay.classList.remove('hidden');
+
+        if (detectionLabel) {
+            // AI 객체 감지 시뮬레이션 (위치 랜덤)
+            const box = document.getElementById('ai-detection-box');
+            const label = document.getElementById('ai-detection-label');
+            
+            const w = 150 + Math.random() * 50;
+            const h = 150 + Math.random() * 50;
+            const x = 50 + Math.random() * 150;
+            const y = 50 + Math.random() * 100;
+
+            box.style.top = `${y}px`;
+            box.style.left = `${x}px`;
+            box.style.width = `${w}px`;
+            box.style.height = `${h}px`;
+            box.style.opacity = '1';
+            
+            label.textContent = detectionLabel;
+            label.style.top = `${y - 20}px`;
+            label.style.left = `${x}px`;
+            label.style.opacity = '1';
+        }
+
+        if (duration > 0) {
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                document.getElementById('ai-detection-box').style.opacity = '0';
+                document.getElementById('ai-detection-label').style.opacity = '0';
+            }, duration);
+        }
+    };
+    
+    // --- 1. 탑승 전 로직 ---
+
+    function startAuthSequence() {
+        // 면허 인증 시뮬레이션
+        updateStatus('auth-status', '① 면허 OCR/안면 인식 중...', 'processing');
+        log('면허 인증 요청: 사용자 카메라 입력 대기');
+        
+        setTimeout(() => {
+            const isAdult = Math.random() > 0.1; // 90% 확률로 성인 인증 성공 가정
+            if (isAdult) {
+                updateStatus('auth-status', '✅ 면허/안면 인증 완료 (만 24세)', 'success');
+                log('면허 인증 성공: 20대 청년층 운전자 확인.', 'success');
+            } else {
+                updateStatus('auth-status', '❌ 면허 인증 실패 (미성년자 or 미취득자)', 'error');
+                log('면허 인증 실패: PM 운행 잠금 상태 유지', 'error');
+                updateCamera('🛑 운행 차단: 미면허', '#f59e0b');
+            }
+        }, 1500);
+    }
+    
+    function checkHelmet(hasHelmet) {
+        // 안전모 인식 시뮬레이션
+        updateStatus('helmet-status', '② 안전모 인식 중...', 'processing');
+        log('안전모 인식 요청: 객체/자세 추정 AI 작동');
+
+        setTimeout(() => {
+            if (hasHelmet) {
+                updateStatus('helmet-status', '✅ 안전모 감지 완료', 'success');
+                log('안전모 착용 확인: PM 잠금 해제 가능', 'success');
+                updateCamera('✅ 안전모 감지', '#10b981', 1500, 'Helmet: 98%');
+            } else {
+                updateStatus('helmet-status', '❌ 안전모 미감지', 'error');
+                log('안전모 미착용: PM 시동 차단', 'error');
+                updateCamera('🛑 안전모 착용 필요!', '#ef4444');
+            }
+        }, 1500);
+    }
+
+    // --- 2. 운행 중 로직 ---
+
+    function triggerGeoFence(safe = false) {
+        // 지오펜싱 시뮬레이션
+        if (safe) {
+             updateStatus('geo-status', '③ 현재: 정상 주행 구역 (30km/h 허용)', 'success');
+             log('지오펜싱: 일반 도로 구역 감지. 최고 속도 30km/h 허용.', 'success');
+             updateCamera('30km/h', '#10b981', 2000);
+             document.getElementById('geo-status').onclick = () => triggerGeoFence(false);
+        } else {
+            updateStatus('geo-status', '⚠️ 구역 감지: 보도 (속도 10km/h 강제 제한)', 'warning');
+            log('지오펜싱 경고: PM 금지 구역 진입! 속도 강제 제한(10km/h).', 'warning');
+            updateCamera('⚠️ 보도 진입: 10km/h 제한', '#f59e0b', 3000);
+            document.getElementById('geo-status').onclick = () => triggerGeoFence(true);
+        }
+    }
+
+    function triggerDangerousDriving() {
+        // 위험 운행 감지 시뮬레이션
+        updateStatus('driving-status', '④ 위험 운행 감지 중...', 'processing');
+        log('센서 데이터 분석: 주행 안정성/패턴 분석 AI 작동');
+        
+        setTimeout(() => {
+            updateStatus('driving-status', '⚠️ 위험 운행 패턴 감지! (급조향, 급가속)', 'warning');
+            log('AI 경고: 급가속/급조향 패턴 감지! PM 속도 5km/h 강제 감속 개입.', 'error');
+            updateCamera('🛑 위험 주행 감지! 자동 감속', '#ef4444', 3000);
+        }, 1000);
+
+        setTimeout(() => {
+            updateStatus('driving-status', '현재: 안전 주행', 'success');
+            log('주행 안정화: AI 감속 개입 종료.', 'success');
+        }, 4000);
+    }
+
+    // --- 3. 반납 후 로직 ---
+
+    function triggerParkingVerification() {
+        updateStatus('parking-status', '⑤ 주차 이미지 인식/검증 중...', 'processing');
+        log('반납 요청: 이미지 인식 AI 작동');
+
+        setTimeout(() => {
+            const isProperlyParked = Math.random() > 0.3; // 70% 확률로 성공 가정
+            if (isProperlyParked) {
+                updateStatus('parking-status', '✅ 스마트 주차 검증 완료 (합법 구역)', 'success');
+                log('주차 성공: 다음 사용자에게 위치 정보 전송', 'success');
+                updateCamera('✅ 주차 성공', '#10b981', 1500, 'Parking Zone');
+            } else {
+                updateStatus('parking-status', '❌ 불법 주차 감지 (보도 중앙/출입구)', 'error');
+                log('주차 실패: 사용자에게 재주차 요청 알림 발송', 'error');
+                updateCamera('❌ 불법 주차! 재주차 요청', '#ef4444');
+            }
+        }, 1500);
+    }
+    
+    function triggerIncentiveSystem() {
+        updateStatus('incentive-status', '⑥ 평판 시스템 연동 중...', 'processing');
+        log('인센티브/페널티 연동: 사용자 평판 점수 업데이트');
+
+        setTimeout(() => {
+            const randomScore = 90 + Math.floor(Math.random() * 10);
+            const parkingResult = document.getElementById('parking-status').className.includes('success');
+            
+            if (parkingResult) {
+                updateStatus('incentive-status', `✅ 운행 완료. 평판 점수 +3 (현재 ${randomScore}점)`, 'success');
+                log(`평판 시스템: 주차 성공 보너스 +3점. 총 ${randomScore}점 기록.`, 'success');
+            } else {
+                updateStatus('incentive-status', `⚠️ 운행 완료. 평판 점수 -5 (현재 ${randomScore - 5}점)`, 'warning');
+                log(`평판 시스템: 불법 주차 페널티 -5점 적용.`, 'error');
+            }
+        }, 1500);
+    }
+
+    function resetSystem() {
+        log('--- 시스템 초기화 ---');
+        updateStatus('auth-status', '면허 인증 대기', 'processing');
+        updateStatus('helmet-status', '안전모 미감지', 'error');
+        updateStatus('geo-status', '현재: 정상 주행 구역', 'success');
+        updateStatus('driving-status', '현재: 안전 주행', 'success');
+        updateStatus('parking-status', '주차 검증 대기', 'processing');
+        updateStatus('incentive-status', '평판 시스템: 정상 연동', 'success');
+        updateCamera('대기 중...', '#3b82f6', 0);
+        document.getElementById('camera-overlay').classList.add('hidden');
+        document.getElementById('ai-detection-box').style.opacity = '0';
+        document.getElementById('ai-detection-label').style.opacity = '0';
+    }
+
+    // 초기 상태 설정
+    window.onload = resetSystem;
+
+</script>
+</body>
+</html>
